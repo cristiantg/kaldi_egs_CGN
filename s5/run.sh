@@ -14,7 +14,8 @@
 #
 echo "+++++++++ run.sh"
 echo `date`
-stage=6 # up to 6 to GMM/HMM
+stage=0
+includednnprep=false 	# set to false to not prepare data for dnn (just gmm/hmm)
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
@@ -243,7 +244,7 @@ echo `date`
 # It is time to clean up our data a bit
 # this takes quite a while.. and is actually only really helpful for the NNet models,
 # so if you're not going to make those, you may as well stop here.
-if [ $stage -le 7 ]; then  
+if $includednnprep && [ $stage -le 7 ]; then  
   echo "++++++++ 7. cleaning up our data a bit ++++++++"
   echo `date`
   for x in s t; do
@@ -252,7 +253,7 @@ if [ $stage -le 7 ]; then
   done
 fi
 
-if [ $stage -le 8 ]; then
+if $includednnprep && [ $stage -le 8 ]; then
   echo "++++++++ 8. recombine our telephone and studio speech to one data dir ++++++++"
   echo `date`
   # Now we're going to recombine our telephone and studio speech to one data dir, and make sure we have alignments for them
@@ -274,7 +275,7 @@ if [ $stage -le 8 ]; then
   fi
 fi
 
-if [ $stage -le 9 ]; then
+if $includednnprep && [ $stage -le 9 ]; then
   # Do one more pass of sat training.
   if $train; then
     echo "++++++++ 9. SAT training ++++++++"
@@ -301,11 +302,13 @@ if [ $stage -le 9 ]; then
         data/$x exp/train_cleaned/tri4/decode_${x}_tgpr{,_fg} || exit 1;
     done
   fi
+  # To train nnet models, please run local/chain/run_tdnn.sh
+  echo "++++++++ Finished, please run local/chain/run_tdnn.sh ++++++++"
 fi
 
-# To train nnet models, please run local/chain/run_tdnn.sh
-echo "++++++++ Finished, please run local/chain/run_tdnn.sh ++++++++"
+echo "++++++++ Finished run.sh ++++++++"
 echo `date`
 exit 0;
 
+# Extra: you can see best WER values running this command:
 # cat exp/train_s/tri2/decode_nosp_tgpr/wer_* | grep WER
