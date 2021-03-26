@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "++++++++ ivector_common.sh ++++++++"
+echo `date`
 
 set -e -o pipefail
 

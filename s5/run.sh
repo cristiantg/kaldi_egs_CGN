@@ -12,8 +12,9 @@
 # By default a fully functioning set of models is created using only CGN. Better performance may be had by
 # using more material for the language model and by extending your lexicon.
 #
-
-stage=0
+echo "+++++++++ run.sh"
+echo `date`
+stage=6 # up to 6 to GMM/HMM
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
@@ -21,13 +22,13 @@ decode=true	# set to false to disable the decoding-related scripts.
 
 . ./cmd.sh	## You'll want to change cmd.sh to something that will work on your system.
            	## This relates to the queue.
- 
+
 [ ! -e steps ] && ln -s ../../wsj/s5/steps steps
 [ ! -e utils ] && ln -s ../../wsj/s5/utils utils
-          	
+
 . utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
 
-cgn=/home/laurensw/Data/CGN			# point this to CGN
+cgn=/vol/bigdata2/corpora2/CGN2			# point this to CGN
 lang="nl"
 comp="a;b;c;d;f;g;h;i;j;k;l;m;n;o"
 nj=30;
@@ -35,7 +36,8 @@ decode_nj=10;
 
 if [ $stage -le 0 ]; then
   # data preparation.
-
+  echo "++++++++ 0. data preparation ++++++++"
+  echo `date`
   # the script detects if a telephone comp is used and splits this into a separate set
   # later, studio and telephone speech can be combined for NNet training
   local/cgn_data_prep.sh $cgn $lang $comp || exit 1;
@@ -73,9 +75,12 @@ if [ $stage -le 0 ]; then
   done
 fi
 
+
 if [ $stage -le 1 ]; then
   # monophone
   if $train; then
+    echo "++++++++ 1.a monophone training ++++++++"
+    echo `date`
     for x in train_s train_t; do
       steps/train_mono.sh --nj $nj --cmd "$train_cmd" \
         data/${x}_5k data/lang_nosp exp/$x/mono0a || exit 1;
@@ -83,19 +88,26 @@ if [ $stage -le 1 ]; then
   fi
 	
   if $decode; then
+    echo "++++++++ 1.b monophone decoding ++++++++"
+    echo `date`
     for x in s t; do
       utils/mkgraph.sh data/lang_nosp_test_tgpr exp/train_${x}/mono0a exp/train_${x}/mono0a/graph_nosp_tgpr
       nspk=$(wc -l <data/dev_${x}/spk2utt)
       [ "$nspk" -gt "$decode_nj" ] && nspk=$decode_nj
+      echo "++++++++ 1.b.1 steps/decode.sh ++++++++"
+      echo `date`
       steps/decode.sh --nj $nspk --cmd "$decode_cmd" \
         exp/train_${x}/mono0a/graph_nosp_tgpr data/dev_${x} exp/train_${x}/mono0a/decode_nosp_tgpr
     done
   fi
 fi
 
+
 if [ $stage -le 2 ]; then
   # tri1
   if $train; then
+    echo "++++++++ 2.a triphone training ++++++++"
+    echo `date`
     for x in train_s train_t; do
       steps/align_si.sh --nj $nj --cmd "$train_cmd" \
         data/${x}_5k data/lang_nosp exp/$x/mono0a exp/$x/mono0a_ali || exit 1;
@@ -105,6 +117,8 @@ if [ $stage -le 2 ]; then
   fi
 	
   if $decode; then
+    echo "++++++++ 2.b triphone decoding ++++++++"
+    echo `date`
     for x in s t; do
       utils/mkgraph.sh data/lang_nosp_test_tgpr exp/train_${x}/tri1 exp/train_${x}/tri1/graph_nosp_tgpr || exit 1;
       nspk=$(wc -l <data/dev_${x}/spk2utt)
@@ -120,9 +134,12 @@ if [ $stage -le 2 ]; then
   fi
 fi
 
+
 if [ $stage -le 3 ]; then
   # tri2
   if $train; then
+    echo "++++++++ 3.a triphone2 training ++++++++"
+    echo `date`
     for x in train_s train_t; do
       steps/align_si.sh --nj 10 --cmd "$train_cmd" \
         data/$x data/lang_nosp exp/$x/tri1 exp/$x/tri1_ali || exit 1;
@@ -134,6 +151,8 @@ if [ $stage -le 3 ]; then
   fi
 
   if $decode; then
+    echo "++++++++ 3.b triphone2 decoding ++++++++"
+    echo `date`
     for x in s t; do
       utils/mkgraph.sh data/lang_nosp_test_tgpr exp/train_${x}/tri2 exp/train_${x}/tri2/graph_nosp_tgpr || exit 1;
       nspk=$(wc -l <data/dev_${x}/spk2utt)
@@ -160,6 +179,8 @@ if [ $stage -le 3 ]; then
 fi
 
 if [ $stage -le 4 ]; then
+  echo "++++++++ 4.a Estimating pronunciation and silence probabilities ++++++++"
+  echo `date`
   # Estimate pronunciation and silence probabilities.
   model=tri2
 
@@ -189,6 +210,8 @@ if [ $stage -le 5 ]; then
   # pronunciation and silence probabilities)
 
   if $train; then
+    echo "++++++++ 5.a triphone 3 training ++++++++"
+    echo `date`
     for x in s t; do
       steps/align_si.sh --nj 10 --cmd "$train_cmd" \
         data/train_${x} data/lang_${x} exp/train_${x}/tri2 exp/train_${x}/tri2_ali  || exit 1;
@@ -198,6 +221,8 @@ if [ $stage -le 5 ]; then
   fi
 
   if $decode; then
+    echo "++++++++ 5.b triphone 3 decoding ++++++++"
+    echo `date`
     for x in s t; do
       utils/mkgraph.sh data/lang_${x}_test_tgpr exp/train_${x}/tri3 exp/train_${x}/tri3/graph_tgpr || exit 1;
       nspk=$(wc -l <data/dev_${x}/spk2utt)
@@ -211,12 +236,16 @@ if [ $stage -le 5 ]; then
     done
   fi
 fi
+echo "++++++++ 6. Finished GMM/HMM models ++++++++"
+echo `date`
+
 
 # It is time to clean up our data a bit
 # this takes quite a while.. and is actually only really helpful for the NNet models,
 # so if you're not going to make those, you may as well stop here.
-
 if [ $stage -le 7 ]; then  
+  echo "++++++++ 7. cleaning up our data a bit ++++++++"
+  echo `date`
   for x in s t; do
     steps/cleanup/clean_and_segment_data.sh --nj $nj --cmd "$train_cmd" --segmentation-opts "--min-segment-length 0.3 --min-new-segment-length 0.6" \
       data/train_${x} data/lang_${x} exp/train_${x}/tri3 exp/train_${x}/tri3_cleaned_work data/train_${x}_cleaned
@@ -224,6 +253,8 @@ if [ $stage -le 7 ]; then
 fi
 
 if [ $stage -le 8 ]; then
+  echo "++++++++ 8. recombine our telephone and studio speech to one data dir ++++++++"
+  echo `date`
   # Now we're going to recombine our telephone and studio speech to one data dir, and make sure we have alignments for them
   # The telephone speech will be 8khz, so we need to upsample & get new features
   for x in train_t_cleaned dev_t; do
@@ -246,6 +277,8 @@ fi
 if [ $stage -le 9 ]; then
   # Do one more pass of sat training.
   if $train; then
+    echo "++++++++ 9. SAT training ++++++++"
+    echo `date`
     # use studio models for this alignment pass
     steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
       data/train_cleaned data/lang_s exp/train_s/tri3 exp/train_cleaned/tri3_ali_cleaned
@@ -254,6 +287,8 @@ if [ $stage -le 9 ]; then
   fi
 
   if $decode; then
+    echo "++++++++ 9. SAT decoding ++++++++"
+    echo `date`
     utils/mkgraph.sh data/lang_s_test_tgpr exp/train_cleaned/tri4 exp/train_cleaned/tri4/graph_tgpr || exit 1;
     for x in dev_s dev_t_16khz; do
       nspk=$(wc -l <data/$x/spk2utt)
@@ -269,5 +304,8 @@ if [ $stage -le 9 ]; then
 fi
 
 # To train nnet models, please run local/chain/run_tdnn.sh
-
+echo "++++++++ Finished, please run local/chain/run_tdnn.sh ++++++++"
+echo `date`
 exit 0;
+
+# cat exp/train_s/tri2/decode_nosp_tgpr/wer_* | grep WER
