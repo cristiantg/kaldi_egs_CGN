@@ -17,8 +17,9 @@
 # (some of which are also used in this script directly).
 
 # repurposed from egs/Tedlium for CGN by LvdW
-echo "++++++++ DNN training/decoding ++++++++"
-echo `date`
+echo "-+- EXE3 -+-"
+echo "+++ DNN training/decoding +++"
+echo $(date)
 stage=0
 nj=30
 decode_nj=10
@@ -77,9 +78,9 @@ for f in $gmm_dir/final.mdl $train_data_dir/feats.scp $train_ivector_dir/ivector
 done
 
 if [ $stage -le 14 ]; then
-  echo "++++++++ 14. ++++++++"
+  echo "+++ 14. +++"
   echo "$0: creating lang directory with one state per phone."
-  echo `date`
+  echo $(date)
   # Create a version of the lang/ directory that has one state per phone in the
   # topo file. [note, it really has two states.. the first one is only repeated
   # once, the second one has zero or more repeats.]
@@ -102,8 +103,8 @@ if [ $stage -le 14 ]; then
 fi
 
 if [ $stage -le 15 ]; then
-  echo "++++++++ 15. Get the alignments as lattices ++++++++"
-  echo `date`
+  echo "+++ 15. Get the alignments as lattices +++"
+  echo $(date)
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
   steps/align_fmllr_lats.sh --nj 100 --cmd "$train_cmd" ${lores_train_data_dir} \
@@ -115,8 +116,8 @@ if [ $stage -le 16 ]; then
   # Build a tree using our new topology.  We know we have alignments for the
   # speed-perturbed data (local/nnet3/run_ivector_common.sh made them), so use
   # those.
-  echo "++++++++ 16. Build a tree using our new topology ++++++++"
-  echo `date`
+  echo "+++ 16. Build a tree using our new topology +++"
+  echo $(date)
   if [ -f $tree_dir/final.mdl ]; then
     echo "$0: $tree_dir/final.mdl already exists, refusing to overwrite it."
     exit 1;
@@ -130,8 +131,8 @@ fi
 if [ $stage -le 17 ]; then
   mkdir -p $dir
 
-  echo "++++++++ 17. ++++++++"
-  echo `date`
+  echo "+++ 17. +++"
+  echo $(date)
   echo "$0: creating neural net configs using the xconfig parser";
 
   num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
@@ -189,8 +190,8 @@ frames_per_iter=1500000
 
 if [ $stage -le 18 ]; then
 
- echo "++++++++ 18. steps/nnet3/chain/train.py ++++++++"
- echo `date`
+ echo "+++ 18. steps/nnet3/chain/train.py +++"
+ echo $(date)
  steps/nnet3/chain/train.py --stage $train_stage \
     --cmd "$decode_cmd" \
     --feat.online-ivector-dir $train_ivector_dir \
@@ -220,8 +221,8 @@ fi
 
 
 if [ $stage -le 19 ]; then
-  echo "++++++++ 19. utils/mkgraph.sh ++++++++"
-  echo `date`
+  echo "+++ 19. utils/mkgraph.sh +++"
+  echo $(date)
   # Note: it might appear that this data/lang_chain directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
@@ -229,8 +230,8 @@ if [ $stage -le 19 ]; then
 fi
 
 if [ $stage -le 20 ]; then
-  echo "++++++++ 20. steps/nnet3/decode.sh dev_s dev_t_16khz ++++++++"
-  echo `date`
+  echo "+++ 20. steps/nnet3/decode.sh dev_s dev_t_16khz +++"
+  echo $(date)
   for x in dev_s dev_t_16khz; do
     nspk=$(wc -l <data/$x/spk2utt)
     [ "$nspk" -gt "$decode_nj" ] && nspk=$decode_nj
@@ -245,6 +246,6 @@ if [ $stage -le 20 ]; then
       data/${x}_hires ${dir}/decode_${x} ${dir}/decode_${x}_rescore || exit
   done
 fi
-echo "++++++++ Finished DNN training/decoding ++++++++"
-echo `date`
+echo "+++ Finished DNN training/decoding +++"
+echo $(date)
 exit 0
