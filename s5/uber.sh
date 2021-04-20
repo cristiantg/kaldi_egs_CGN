@@ -6,6 +6,14 @@
 
 
 # 2. Prepare configuration
+#
+# steps/online/nnet3/prepare_online_decoding.sh --mfcc-config conf/mfcc_hires.conf data/lang_chain exp/nnet3_cleaned/extractor exp/chain_cleaned/tdnn1a_sp_bi exp/tdnn1a_sp_bi_online
+# utils/mkgraph.sh --self-loop-scale 1.0 data/lang_s_test_tgpr exp/tdnn1a_sp_bi_online exp/tdnn1a_sp_bi_online/graph_s
+#
+# Be sure your wav files are in the correct format:
+# sox source_data/spk001/bird_original.wav -r 16000 -c 1 -b 16 raw_data/spk001/bird.wav
+# for i in source_data/spk001/*.wav; do sox "$i" -r 16000 -c 1 -b 16 raw_data/spk001/"$i"; done
+#
 raw_folder="raw_data/"
 audio_file_ext=".wav"
 m_output="output"
@@ -39,19 +47,19 @@ for f in ${raw_folder}*; do
                 --online=false \
                 --do-endpointing=false \
                 --frame-subsampling-factor=3 \
-                --config=_runs/run2/exp/tdnn1a_sp_bi_online/conf/online.conf \
+                --config=exp/tdnn1a_sp_bi_online/conf/online.conf \
                 --max-active=7000 \
                 --beam=15.0 \
                 --lattice-beam=6.0 \
                 --acoustic-scale=1.0 \
-                --word-symbol-table=_runs/run2/exp/tdnn1a_sp_bi_online/graph_s/words.txt \
-                _runs/run2/exp/tdnn1a_sp_bi_online/final.mdl \
-                _runs/run2/exp/tdnn1a_sp_bi_online/graph_s/HCLG.fst \
+                --word-symbol-table=exp/tdnn1a_sp_bi_online/graph_s/words.txt \
+                exp/tdnn1a_sp_bi_online/final.mdl \
+                exp/tdnn1a_sp_bi_online/graph_s/HCLG.fst \
                 'ark:echo '$spk' '$utt'|' \
                 'scp:echo '$utt' '$audio_file'|' \
                 ark:- | lattice-to-ctm-conf ark:- $m_output/$m_bestsym
                 
-                utils/int2sym.pl -f 5 _runs/run2/exp/tdnn1a_sp_bi_online/graph_s/words.txt $m_output/$m_bestsym  > $m_output/$m_best
+                utils/int2sym.pl -f 5 exp/tdnn1a_sp_bi_online/graph_s/words.txt $m_output/$m_bestsym  > $m_output/$m_best
 
                 end=`date +%s`
                 runtime=$((end-start))
