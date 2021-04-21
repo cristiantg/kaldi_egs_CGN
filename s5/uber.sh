@@ -11,8 +11,11 @@
 # utils/mkgraph.sh --self-loop-scale 1.0 data/lang_s_test_tgpr exp/tdnn1a_sp_bi_online exp/tdnn1a_sp_bi_online/graph_s
 #
 # Be sure your wav files are in the correct format:
+# a) One by one:
 # sox source_data/spk001/bird_original.wav -r 16000 -c 1 -b 16 raw_data/spk001/bird.wav
-# for i in source_data/spk001/*.wav; do sox "$i" -r 16000 -c 1 -b 16 raw_data/spk001/"$i"; done
+# b) All files at the same time
+# cd source_data/spk001
+# for i in *.wav; do sox "$i" -r 16000 -c 1 -b 16 ../../raw_data/spk001/"$i"; done
 #
 raw_folder="raw_data/"
 audio_file_ext=".wav"
