@@ -14,8 +14,8 @@
 #
 echo "+++ run.sh"
 echo $(date)
-stage=7
-includednnprep=true 	# set to false to not prepare data for dnn (just gmm/hmm)
+stage=0
+includednnprep=false 	# set to false to not prepare data for dnn (just gmm/hmm)
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
