@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Decodes all audio files in a path (and subpaths) in real-time
+
 # 1. Prepare environment
 . cmd.sh
 . path.sh
@@ -50,19 +52,19 @@ for f in ${raw_folder}*; do
                 --online=false \
                 --do-endpointing=false \
                 --frame-subsampling-factor=3 \
-                --config=exp/tdnn1a_sp_bi_online/conf/online.conf \
+                --config=_runs2022/exp/tdnn1a_sp_bi_online/conf/online.conf \
                 --max-active=7000 \
                 --beam=15.0 \
                 --lattice-beam=6.0 \
                 --acoustic-scale=1.0 \
-                --word-symbol-table=exp/tdnn1a_sp_bi_online/graph_s/words.txt \
-                exp/tdnn1a_sp_bi_online/final.mdl \
-                exp/tdnn1a_sp_bi_online/graph_s/HCLG.fst \
+                --word-symbol-table=_runs2022/exp/tdnn1a_sp_bi_online/graph_s/words.txt \
+                _runs2022/exp/tdnn1a_sp_bi_online/final.mdl \
+                _runs2022/exp/tdnn1a_sp_bi_online/graph_s/HCLG.fst \
                 'ark:echo '$spk' '$utt'|' \
                 'scp:echo '$utt' '$audio_file'|' \
                 ark:- | lattice-to-ctm-conf ark:- $m_output/$m_bestsym
                 
-                utils/int2sym.pl -f 5 exp/tdnn1a_sp_bi_online/graph_s/words.txt $m_output/$m_bestsym  > $m_output/$m_best
+                utils/int2sym.pl -f 5 _runs2022/exp/tdnn1a_sp_bi_online/graph_s/words.txt $m_output/$m_bestsym  > $m_output/$m_best
 
                 end=`date +%s`
                 runtime=$((end-start))

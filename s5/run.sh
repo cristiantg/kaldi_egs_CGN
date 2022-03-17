@@ -304,8 +304,8 @@ if $includednnprep && [ $stage -le 9 ]; then
         data/$x exp/train_cleaned/tri4/decode_${x}_tgpr{,_fg} || exit 1;
     done
   fi
-  # To train nnet models, please run local/chain/run_tdnn.sh
-  echo "++ Finished, please run local/chain/run_tdnn.sh ++"
+  # To train nnet models, please run: nohup ./local/chain/run_tdnn.sh &
+  echo "++ Finished, please run:       nohup ./local/chain/run_tdnn.sh &        ++"
 fi
 
 echo "++ Finished run.sh ++"
