@@ -1,0 +1,20 @@
+# Lexicon files sources: UTwente + CGN train (t and s) texts
+# Use the following commands to use the G2P tool of webservices to obatin your custom lexicon:
+#
+# Execution: nohup time exe.sh &
+#
+
+# Create a file: exe.sh and include teh following commands:
+
+#mkdir -p /home/ctejedor/python-scripts/
+#git clone https://github.com/cristiantg/lexiconator
+
+cd kaldi_egs_CGN/s5
+m_project=/home/ctejedor/python-scripts/lexiconator
+# Edit the file: prepare_lexicon.py and ony keep REPLACE_SYMBOLS={"&": "-en-",}
+vi $m_project/prepare_lexicon.py
+python3 $m_project/uber_script.py <CLAM-USER> <CLAM_PWD> $m_project 1 0 "" wordlists/lexi1.txt $m_project/output1
+python3 $m_project/uber_script.py <CLAM-USER> <CLAM_PWD> $m_project 1 0 "" wordlists/lexi2.txt $m_project/output2
+final_lexicon=wordlists/lexicon.txt
+cat $m_project/output1/results-final/lexicon.txt $m_project/output2/results-final/lexicon.txt > $final_lexicon
+sed -i '/^$/d' $final_lexicon

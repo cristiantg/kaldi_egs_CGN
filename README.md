@@ -46,3 +46,31 @@ Be sure you have enough privileges to run sh scripts:
 cd $KALDI_ROOT/egs/kaldi_egs_CGN
 chmod -R 774 ./*
 ```
+
+
+Execution:
+
+**Tested on Thunderlane/Ponyland**
+
+*EXE1: 6h 08min*:
+```
+# Change: includednnprep=false & stage=0 
+nohup time ./run.sh &
+
+# Extra: tree -L 2 data exp > tree_exe1.txt
+```
+
+*EXE2: 11h 06min*:
+```
+# Change: includednnprep=true and stage=7
+nohup time ./run.sh &
+
+# Extra: tree -L 2 data exp > tree_exe2.txt
+```
+
+*EXE3 (GPUs needed): 29h 17min*:
+```
+nohup time ./local/chain/run_tdnn.sh &
+
+# Extra: tree -L 2 data exp > tree_exe3.txt
+```

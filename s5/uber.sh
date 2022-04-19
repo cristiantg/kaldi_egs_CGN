@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
+# Decodes all audio files in a root path in real-time. The root path must only
+# contain subfolders (speakers) and these subfolders must contain audio files.
 
-# Decodes all audio files in a path (and subpaths) in real-time
+if [ $# -lt 5 ]; 
+then
+  echo "Please add 5 parameters: the output folder path of the decoding call; HCLG folder; mdl folder; conf folder; audio files root folder"
+  echo "Example 1: $0 output exp/tdnn1a_sp_bi_online/graph_s exp/tdnn1a_sp_bi_online exp/tdnn1a_sp_bi_online/conf raw_data"
+  echo "Example 2: nohup time $0 output exp/tdnn1a_sp_bi_online/graph_s exp/tdnn1a_sp_bi_online exp/tdnn1a_sp_bi_online/conf raw_data &"
+  exit -2
+else 
+
 
 # 1. Prepare environment
 . cmd.sh
 . path.sh
-
 
 # 2. Prepare configuration
 #
@@ -19,16 +27,24 @@
 # cd source_data/spk001
 # for i in *.wav; do sox "$i" -r 16000 -c 1 -b 16 ../../raw_data/spk001/"$i"; done
 #
-raw_folder="raw_data/"
+# Must be a root folder with subdirectories
+# nohup time ./uber.sh &
+raw_folder="$5"
 audio_file_ext=".wav"
-m_output="output"
+graph_s="$2"
+model_s="$3"
+conf_s="$4"
+#m_output="output"
+m_output="$1"
 mkdir -p $m_output
+echo "*** Run: m_output=$m_output"
 
 
 # 3. Main loop
 spk_counter=0
 utt_counter=0
-for f in ${raw_folder}*; do
+for f in ${raw_folder}/*; do
+    echo $f
     if [ -d "$f" ]; then
         spk="${f//$raw_folder/""}"
         ((spk_counter=spk_counter+1))
@@ -45,26 +61,29 @@ for f in ${raw_folder}*; do
 
                 # 3. Decode a wav file
                 m_bestsym="${spk}_${utt}_1bestsym.ctm"
-                m_best="${spk}_${utt}_1best.ctm"
+                #m_best="${spk}_${utt}_1best.ctm"
+                m_bestsym="${utt}_1bestsym.ctm"                
+                m_best="${utt}.ctm"
 
 
                 online2-wav-nnet3-latgen-faster \
                 --online=false \
                 --do-endpointing=false \
                 --frame-subsampling-factor=3 \
-                --config=_runs2022/exp/tdnn1a_sp_bi_online/conf/online.conf \
+                --config=$conf_s/online.conf \
                 --max-active=7000 \
-                --beam=15.0 \
-                --lattice-beam=6.0 \
+                --beam=20.0 \
+                --lattice-beam=7.0 \
                 --acoustic-scale=1.0 \
-                --word-symbol-table=_runs2022/exp/tdnn1a_sp_bi_online/graph_s/words.txt \
-                _runs2022/exp/tdnn1a_sp_bi_online/final.mdl \
-                _runs2022/exp/tdnn1a_sp_bi_online/graph_s/HCLG.fst \
+                --word-symbol-table=$graph_s/words.txt \
+                $model_s/final.mdl \
+                $graph_s/HCLG.fst \
                 'ark:echo '$spk' '$utt'|' \
                 'scp:echo '$utt' '$audio_file'|' \
-                ark:- | lattice-to-ctm-conf ark:- $m_output/$m_bestsym
-                
-                utils/int2sym.pl -f 5 _runs2022/exp/tdnn1a_sp_bi_online/graph_s/words.txt $m_output/$m_bestsym  > $m_output/$m_best
+                ark:- | lattice-to-ctm-conf ark:- $m_output/$m_bestsym                
+                # Do not add parameters like inv-scale etc, it does not work at all.
+
+                utils/int2sym.pl -f 5 $graph_s/words.txt $m_output/$m_bestsym  > $m_output/$m_best
 
                 end=`date +%s`
                 runtime=$((end-start))
@@ -75,3 +94,4 @@ for f in ${raw_folder}*; do
     echo " --> SPEAKER (${spk_counter}): ${utt_counter} utterances"  
 done
 echo -e "\nTotal processed - speakers: ${spk_counter}, audio files  ${utt_counter}." 
+fi

@@ -246,6 +246,14 @@ if [ $stage -le 20 ]; then
       data/${x}_hires ${dir}/decode_${x} ${dir}/decode_${x}_rescore || exit
   done
 fi
+
+if [ $stage -le 21 ]; then
+  echo "+++ 21. steps/online/nnet3/prepare_online_decoding.sh +++"
+  echo $(date)
+  steps/online/nnet3/prepare_online_decoding.sh --mfcc-config conf/mfcc_hires.conf data/lang_chain exp/nnet3_cleaned/extractor exp/chain_cleaned/tdnn1a_sp_bi exp/tdnn1a_sp_bi_online
+  utils/mkgraph.sh --self-loop-scale 1.0 data/lang_s_test_tgpr exp/tdnn1a_sp_bi_online exp/tdnn1a_sp_bi_online/graph_s
+fi
+
 echo "+++ Finished DNN training/decoding +++"
 echo $(date)
 exit 0

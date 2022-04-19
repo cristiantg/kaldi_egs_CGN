@@ -2,14 +2,15 @@
 
 # Preparation for CGN data by LvdW
 
-if [ $# -le 2 ]; then
-   echo "Arguments should be <CGN root> <language> <comps>, see ../run.sh for example."
+if [ $# -le 3 ]; then
+   echo "Arguments should be <CGN root> <language> <comps> <optional-lexicon>, see ../run.sh for example."
    exit 1;
 fi
 
 cgn=$1
 lang=$2
 comps=$3
+lexi=$4
 
 base=`pwd`
 dir=`pwd`/data/local/data
@@ -60,14 +61,24 @@ done
 
 # prepare lexicon
 ## If you have a lexicon prepared, you can simply place it in $dictdir and it will be used instead of the default CGN one
+## Cristian TG: 2022/04/14
+mkdir -p $dictdir
+if [ -f $lexi ]; then
+	echo "** Lexicon: found a custom lexicon, copy&paste it..."	
+	cp $lexi $dictdir/lexicon.txt
+else
+	echo "** Lexicon: using default CGN lexicon"	
+fi
 if [ ! -f $dictdir/lexicon.txt ]; then
-	mkdir -p $dictdir
 	[ -e $cgn/data/lexicon/xml/cgnlex.lex ] && cat $cgn/data/lexicon/xml/cgnlex.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
 	[ -e $cgn/data/lexicon/xml/cgnlex_2.0.lex ] && cat $cgn/data/lexicon/xml/cgnlex_2.0.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
 	## uncomment lines below to convert to UTwente phonetic lexicon	
 	# cp $dictdir/lexicon.txt $dictdir/lexicon.orig.txt	
 	# cat $dictdir/lexicon.orig.txt | perl $local/cgn2nbest_phon.pl >$dictdir/lexicon.txt
+else
+	echo "** Lexicon: skipped lexicon preparation"
 fi
+
 if ! grep -q "^<unk>" $dictdir/lexicon.txt; then
 	echo -e "<unk>\t[SPN]" >>$dictdir/lexicon.txt
 fi
@@ -80,7 +91,10 @@ fi
 # the rest
 echo SIL > $dictdir/silence_phones.txt
 echo SIL > $dictdir/optional_silence.txt
-cat $dictdir/lexicon.txt | awk -F'\t' '{print $2}' | sed 's/ /\n/g' | sort | uniq >$dictdir/nonsilence_phones.txt
+non_silence=$dictdir/nonsilence_phones.txt
+cat $dictdir/lexicon.txt | awk -F'\t' '{print $2}' | sed 's/ /\n/g' | sort | uniq >$non_silence
+# Remove potential empty lines
+sed -i '/^$/d' $non_silence
 touch $dictdir/extra_questions.txt
 rm -f $dictdir/lexiconp.txt
 

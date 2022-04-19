@@ -2,14 +2,15 @@
 
 # Decodes a single audio file in real-time
 
-# run: ./uber_single.sh . input_folder input_file_name output_folder output_file_name spk_id
-# r.a. example: ./uber_single.sh . raw_data/other bird.wav output2/other bird speaker
-# r.b. optimized: ./uber_single.sh . raw_data/other bird.wav output2/other bird speaker > somefile 2>&1
+# run: ./uber_single.sh . input_folder input_file_name output_folder output_file_name spk_id beam
+# r.a. example: ./uber_single.sh . raw_data/other bird.wav output2/other bird speaker 15
+# r.b. optimized: ./uber_single.sh . raw_data/other bird.wav output2/other bird speaker 15 > somefile 2>&1
 
 
 # 1. Prepare environment
-. $1/cmd.sh
-. $1/path.sh
+root_project=$1/../../
+. $root_project/cmd.sh
+. $root_project/path.sh
 
 
 # 2. Prepare configuration
@@ -43,7 +44,7 @@ if [ -f "$audio_file" ]; then
     --frame-subsampling-factor=3 \
     --config=${1}/conf/online.conf \
     --max-active=7000 \
-    --beam=15.0 \
+    --beam=${7} \
     --lattice-beam=6.0 \
     --acoustic-scale=1.0 \
     --word-symbol-table=${1}/graph_s/words.txt \
@@ -53,5 +54,5 @@ if [ -f "$audio_file" ]; then
     'scp:echo '$utt' '$audio_file'|' \
     ark:- | lattice-to-ctm-conf --frame-shift=0.03 --inv-acoustic-scale=10 ark:- $output_folder/$m_bestsym
 
-    ${1}/../../../utils/int2sym.pl -f 5 ${1}/graph_s/words.txt $output_folder/$m_bestsym > $output_folder/$output_file_name
+    $root_project/utils/int2sym.pl -f 5 ${1}/graph_s/words.txt $output_folder/$m_bestsym > $output_folder/$output_file_name
 fi

@@ -15,11 +15,16 @@
 echo "+++ run.sh"
 echo $(date)
 stage=0
-includednnprep=false 	# set to false to not prepare data for dnn (just gmm/hmm)
+includednnprep=true 	# set to false to not prepare data for dnn (just gmm/hmm)
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
 decode=true	# set to false to disable the decoding-related scripts.
+# Optional: ABSOLUTE PATH to your lexicon file. By default, set: lexicon_file=-
+# You might build your own lexicon using the two wordlist files in 'wordlists' folder
+# See more details in: wordlists/README
+lexicon_file=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/wordlists/lexicon.txt
+cgn=/vol/bigdata2/corpora2/CGN2			# point this to CGN
 
 . ./cmd.sh	## You'll want to change cmd.sh to something that will work on your system.
            	## This relates to the queue.
@@ -29,7 +34,6 @@ decode=true	# set to false to disable the decoding-related scripts.
 
 . utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
 
-cgn=/vol/bigdata2/corpora2/CGN2			# point this to CGN
 lang="nl"
 comp="a;b;c;d;f;g;h;i;j;k;l;m;n;o"
 nj=30;
@@ -42,7 +46,7 @@ if [ $stage -le 0 ]; then
   echo $(date)
   # the script detects if a telephone comp is used and splits this into a separate set
   # later, studio and telephone speech can be combined for NNet training
-  local/cgn_data_prep.sh $cgn $lang $comp || exit 1;
+  local/cgn_data_prep.sh $cgn $lang $comp $lexicon_file || exit 1;
 
   # the text in cleaned.gz is used to train the lm..
   cat data/train_s/text data/train_t/text | cut -d' ' -f2- | gzip -c >data/local/dict_nosp/cleaned.gz
