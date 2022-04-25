@@ -1,20 +1,21 @@
 # Lexicon files sources: UTwente + CGN train (t and s) texts
 # Use the following commands to use the G2P tool of webservices to obatin your custom lexicon:
 #
-# Execution: nohup time exe.sh &
+# Create a file: exe.sh and include the following commands:
+# Execution: chmod 700 exe.sh && nohup time exe.sh &
+# You need to set the variable: "lexicon_file" in "run.sh" (absolute path)
 #
 
-# Create a file: exe.sh and include teh following commands:
-
-#mkdir -p /home/ctejedor/python-scripts/
-#git clone https://github.com/cristiantg/lexiconator
-
-cd kaldi_egs_CGN/s5
-m_project=/home/ctejedor/python-scripts/lexiconator
-# Edit the file: prepare_lexicon.py and ony keep REPLACE_AMPERSAND=' -en- '
-vi $m_project/prepare_lexicon.py
-python3 $m_project/uber_script.py <CLAM-USER> <CLAM_PWD> $m_project 0 0 "" wordlists/lexi1.txt $m_project/output1
-python3 $m_project/uber_script.py <CLAM-USER> <CLAM_PWD> $m_project 0 0 "" wordlists/lexi2.txt $m_project/output2
+#!/bin/bash
+root_folder=/home/ctejedor/python-scripts
+mkdir -p $root_folder
+lexi_project=$root_folder/lexiconator
+git clone https://github.com/cristiantg/lexiconator $lexi_project
+cd <absolute_path_to>kaldi_egs_CGN/s5
+## Make sure the file: $lexi_project/prepare_lexicon.py has REPLACE_AMPERSAND=' -en- '
+## vi $lexi_project/prepare_lexicon.py
+python3 $lexi_project/uber_script.py <CLAM-USER> <CLAM_PWD> $lexi_project 0 0 "" wordlists/lexi1.txt $lexi_project/output1
+python3 $lexi_project/uber_script.py <CLAM-USER> <CLAM_PWD> $lexi_project 0 0 "" wordlists/lexi2.txt $lexi_project/output2
 final_lexicon=wordlists/lexicon.txt
-cat $m_project/output1/results-final/lexicon.txt $m_project/output2/results-final/lexicon.txt > $final_lexicon
+cat $lexi_project/output1/results-final/lexicon.txt $lexi_project/output2/results-final/lexicon.txt > $final_lexicon
 sed -i '/^$/d' $final_lexicon
