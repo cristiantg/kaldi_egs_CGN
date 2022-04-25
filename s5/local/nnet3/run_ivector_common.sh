@@ -66,6 +66,8 @@ if [ $stage -le 2 ]; then
   # features; this helps make trained nnets more invariant to test data volume.
   utils/data/perturb_data_dir_volume.sh data/${train_set}_sp_hires
 
+echo "++++++++ steps/make_mfcc.sh mfcc_hires ++++++++"
+echo `date`
   for datadir in ${train_set}_sp dev_s dev_t_16khz; do
     steps/make_mfcc.sh --nj $nj --mfcc-config conf/mfcc_hires.conf \
       --cmd "$train_cmd" data/${datadir}_hires
@@ -75,7 +77,8 @@ if [ $stage -le 2 ]; then
 fi
 
 if [ $stage -le 3 ]; then
-  echo "$0: combining short segments of speed-perturbed high-resolution MFCC training data"
+  echo "++ stage -- $stage - $0: combining short segments of speed-perturbed high-resolution MFCC training data"
+  echo `date`
   # we have to combine short segments or we won't be able to train chain models
   # on those segments.
   utils/data/combine_short_segments.sh \
@@ -87,9 +90,9 @@ if [ $stage -le 3 ]; then
 fi
 
 if [ $stage -le 4 ]; then
-  echo "$0: selecting segments of hires training data that were also present in the"
+  echo "++ stage -- $stage - $0: selecting segments of hires training data that were also present in the"
   echo " ... original training data."
-
+echo `date`
   # note, these data-dirs are temporary; we put them in a sub-directory
   # of the place where we'll make the alignments.
   temp_data_root=exp/nnet3${nnet3_affix}/tri5
@@ -106,6 +109,7 @@ if [ $stage -le 4 ]; then
   fi
 
   echo "$0: training a system on the hires data for its LDA+MLLT transform, in order to produce the diagonal GMM."
+  echo `date`
   if [ -e exp/nnet3${nnet3_affix}/tri5/final.mdl ]; then
     # we don't want to overwrite old stuff, ask the user to delete it.
     echo "$0: exp/nnet3${nnet3_affix}/tri5/final.mdl already exists: "
@@ -120,8 +124,8 @@ if [ $stage -le 4 ]; then
 fi
 
 if [ $stage -le 5 ]; then
-  echo "$0: computing a subset of data to train the diagonal UBM."
-
+  echo "++ stage -- $stage - $0: computing a subset of data to train the diagonal UBM."
+echo `date`
   temp_data_root=exp/nnet3${nnet3_affix}/diag_ubm
   mkdir -p $temp_data_root
 
@@ -134,7 +138,8 @@ if [ $stage -le 5 ]; then
   utils/data/subset_data_dir.sh data/${train_set}_sp_hires \
     $num_utts ${temp_data_root}/${train_set}_sp_hires_subset
 
-  echo "$0: training the diagonal UBM."
+  echo "++ stage -- $stage - $0: training the diagonal UBM."
+  echo `date`
   # Use 512 Gaussians in the UBM.
   steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 30 \
     --num-frames 700000 \
@@ -147,12 +152,15 @@ if [ $stage -le 6 ]; then
   # Train the iVector extractor.  Use all of the speed-perturbed data since iVector extractors
   # can be sensitive to the amount of data.  The script defaults to an iVector dimension of
   # 100.
-  echo "$0: training the iVector extractor"
+  echo "++ stage -- $stage - $0: training the iVector extractor"
+  echo `date`
   steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 10 \
     data/${train_set}_sp_hires exp/nnet3${nnet3_affix}/diag_ubm exp/nnet3${nnet3_affix}/extractor || exit 1;
 fi
 
 if [ $stage -le 7 ]; then
+  echo "++ stage -- $stage - $0: ivectordir"
+  echo `date`
   # note, we don't encode the 'max2' in the name of the ivectordir even though
   # that's the data we extract the ivectors from, as it's still going to be
   # valid for the non-'max2' data, the utterance list is the same.
@@ -186,6 +194,7 @@ fi
 if [ -f data/${train_set}_sp/feats.scp ] && [ $stage -le 9 ]; then
   echo "$0: $feats already exists.  Refusing to overwrite the features "
   echo " to avoid wasting time.  Please remove the file and continue if you really mean this."
+  echo `date`
   exit 1;
 fi
 
@@ -193,6 +202,7 @@ fi
 if [ $stage -le 8 ]; then
   for x in s t; do
     echo "$0: preparing directory for low-resolution speed-perturbed data (for alignment)"
+    echo `date`
     utils/data/perturb_data_dir_speed_3way.sh \
       data/${train_set} data/${train_set}_sp
   done
@@ -200,7 +210,7 @@ fi
 
 if [ $stage -le 9 ]; then
   echo "$0: making MFCC features for low-resolution speed-perturbed data"
-
+  echo `date`
   steps/make_mfcc.sh --nj $nj \
     --cmd "$train_cmd" data/${train_set}_sp
   steps/compute_cmvn_stats.sh data/${train_set}_sp
@@ -211,6 +221,7 @@ fi
 
 if [ $stage -le 10 ]; then
   echo "$0: combining short segments of low-resolution speed-perturbed  MFCC data"
+  echo `date`
   src=data/${train_set}_sp
   dest=data/${train_set}_sp_comb
   utils/data/combine_short_segments.sh $src $min_seg_len $dest
@@ -224,12 +235,16 @@ if [ $stage -le 11 ]; then
   if [ -f $ali_dir/ali.1.gz ]; then
     echo "$0: alignments in ${ali_dir}_${x} appear to already exist.  Please either remove them "
     echo " ... or use a later --stage option."
+    echo `date`
     exit 1
   fi
   echo "$0: aligning with the perturbed, short-segment-combined low-resolution data"
+  echo `date`
   steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
     data/${train_set}_sp_comb data/lang_s $gmm_dir $ali_dir
 fi
 
+echo "++ Finished run_ivector_common.sh ++"
+echo `date`
 
 exit 0;

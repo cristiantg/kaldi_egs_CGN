@@ -53,6 +53,8 @@ where "nvcc" is installed.
 EOF
 fi
 
+echo "+++ run_ivector_common +++"
+echo $(date)
 local/nnet3/run_ivector_common.sh --stage $stage \
                                   --nj $nj \
                                   --min-seg-len $min_seg_len \
@@ -85,6 +87,8 @@ if [ $stage -le 14 ]; then
   # topo file. [note, it really has two states.. the first one is only repeated
   # once, the second one has zero or more repeats.]
   if [ -d data/lang_chain ]; then
+  echo "+++  -d data/lang_chain  +++"
+  echo $(date)
     if [ data/lang_chain/L.fst -nt data/lang/L.fst ]; then
       echo "$0: data/lang_chain already exists, not overwriting it; continuing"
     else
@@ -93,6 +97,8 @@ if [ $stage -le 14 ]; then
       exit 1;
     fi
   else
+  echo "+++  Use our special topology... note that later on may have to tune this topo +++"
+  echo $(date)
     cp -r data/lang_s data/lang_chain
     silphonelist=$(cat data/lang_chain/phones/silence.csl) || exit 1;
     nonsilphonelist=$(cat data/lang_chain/phones/nonsilence.csl) || exit 1;
