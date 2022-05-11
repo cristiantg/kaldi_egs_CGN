@@ -52,7 +52,7 @@ if [ -f "$audio_file" ]; then
     ${1}/graph_s/HCLG.fst \
     'ark:echo '$spk_id' '$utt'|' \
     'scp:echo '$utt' '$audio_file'|' \
-    ark:- | lattice-to-ctm-conf --frame-shift=0.03 --inv-acoustic-scale=10 ark:- $output_folder/$m_bestsym
+    ark:- | lattice-to-ctm-conf --frame-shift=0.03 ark:- $output_folder/$m_bestsym
 
     $root_project/utils/int2sym.pl -f 5 ${1}/graph_s/words.txt $output_folder/$m_bestsym > $output_folder/$output_file_name
 fi
