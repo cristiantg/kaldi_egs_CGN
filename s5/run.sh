@@ -12,6 +12,12 @@
 # By default a fully functioning set of models is created using only CGN. Better performance may be had by
 # using more material for the language model and by extending your lexicon.
 #
+
+
+###################exit 0 # TODO REMOVE THIS LINE, IT IS JUST FOR SECURITY
+##
+#
+
 echo "+++ run.sh"
 echo $(date)
 stage=0
@@ -19,7 +25,7 @@ includednnprep=true 	# set to false to not prepare data for dnn (just gmm/hmm)
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
-decode=true	# set to false to disable the decoding-related scripts.
+decode=false	# set to false to disable the decoding-related scripts.
 # Optional: ABSOLUTE PATH to your lexicon file. By default, set: lexicon_file=-
 # You might build your own lexicon using the two wordlist files in 'wordlists' folder
 # See more details in: wordlists/README
@@ -55,6 +61,11 @@ if [ $stage -le 0 ]; then
   local/cgn_train_lms.sh --dict-suffix "_nosp"
   local/cgn_format_local_lms.sh --lang-suffix "_nosp"
 
+
+exit 0 # NEW 202/08/12 CRIS DELETE
+
+
+# Extract MFFCC
   for x in train_s dev_s; do
     steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj data/$x || exit 1;
     steps/compute_cmvn_stats.sh data/$x || exit 1;

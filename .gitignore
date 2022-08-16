@@ -10,4 +10,5 @@ s5/source_data
 s5/raw_data*
 s5/output*
 s5/logfile
+s5/exe.sh
 s5/wordlists/lexicon.txt
