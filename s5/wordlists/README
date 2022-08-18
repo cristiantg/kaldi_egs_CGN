@@ -3,13 +3,16 @@
 #
 # 1. Create a file: exe.sh and include the commands at the end of this file.
 # 2. Execution: chmod 700 exe.sh && nohup time exe.sh &
-# 3. After generating the final lexicon file, you need to set the path
-# in the variable: "lexicon_file" in the file "run.sh" (absolute path)
+# 3. After generating the final lexicon file, you need to set its path
+# to the variable: "lexicon_file" in the file "run.sh" (absolute path)
 #
 
+
+## COPY AND PASTE THE FOLLOWING LINES INTO A SHELL SCRIPT: exe.sh
 #!/bin/bash
-CLAMUSER=
-CLAMPWD=
+CLAMUSER=<change-value>
+CLAMPWD=<change-value>
+
 output=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/wordlists2/
 final_lexicon=$output/lexicon.txt
 root_folder=/home/ctejedor/python-scripts
