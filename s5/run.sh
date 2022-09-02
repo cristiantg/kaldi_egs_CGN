@@ -21,14 +21,14 @@
 echo "+++ run.sh"
 echo $(date)
 stage=0
-includednnprep=true 	# set to false to not prepare data for dnn (just gmm/hmm)
+includednnprep=false 	# set to false to not prepare data for dnn (just gmm/hmm)
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
-decode=false	# set to false to disable the decoding-related scripts.
+decode=true	# set to false to disable the decoding-related scripts.
 # Optional: ABSOLUTE PATH to your lexicon file. By default, set: lexicon_file=-
 # You might build your own lexicon using the two wordlist files in 'wordlists' folder
-# See more details in: wordlists/README
+# See more details in: s5/wordlists/README
 lexicon_file=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/wordlists/lexicon.txt
 cgn=/vol/bigdata2/corpora2/CGN2			# point this to CGN
 
@@ -62,10 +62,10 @@ if [ $stage -le 0 ]; then
   local/cgn_format_local_lms.sh --lang-suffix "_nosp"
 
 
-exit 0 # NEW 202/08/12 CRIS DELETE
 
 
-# Extract MFFCC
+
+# Extract MFCC
   for x in train_s dev_s; do
     steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj data/$x || exit 1;
     steps/compute_cmvn_stats.sh data/$x || exit 1;
