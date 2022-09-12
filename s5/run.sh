@@ -62,7 +62,7 @@ if [ $stage -le 0 ]; then
   local/cgn_format_local_lms.sh --lang-suffix "_nosp"
 
 
-
+exit 0 # TODO - CRIS REMOVE
 
 
 # Extract MFCC
