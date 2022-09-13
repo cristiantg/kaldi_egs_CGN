@@ -1,23 +1,27 @@
 #!/usr/bin/env bash
 
-### Preprocessing WAV/CTM files at NO-INTERNET-PC for data preparation
-# NO-INTERNET-PC:
+### Preprocessing WAV/CTM files for Kaldi data preparation and feature extraction
+# INPUT:
 # 1. wav folder: wav_source
 # 2. ctm folder: ctm_source
 #
-# Dependencies:
+# OUTPUT: $output_project
+# 1. Kaldi folder with all preprocessed data
+# 2. Feature files
 #
-# IF using the G2P tool option (stage 0 and stage 2.2.a):
-# 0. Kaldi installed on $KALDI_ROOT
-# 1. Internet connection
-# 2. Credentials of: https://webservices.cls.ru.nl/
-# 3. LaMachine environment activated
-# ELSE
-# 1. https://github.com/cristiantg/lexiconator
-# 2. https://github.com/cristiantg/ctmator
-# 3. https://github.com/cristiantg/check_duration_audio_files
+# DEPENDENCIES:
+# 1. Kaldi installed on $KALDI_ROOT
+# 2. Network connection
+# 3. Credentials of: https://webservices.cls.ru.nl/
+# 4. LaMachine environment activated
+# 5. Other repositories (see local/check_repositories.sh):
+# 5.1. https://github.com/cristiantg/lexiconator
+# 5.2. https://github.com/cristiantg/ctmator
+# 5.3. https://github.com/cristiantg/check_duration_audio_files
+# 5.4. SRILM (Kaldi)
 #
-# Run: # Set first the values of $stage and $substage
+# RUN: 
+# Set first the values of $stage and $substage
 # nohup time ./uber_custom_models.sh &
 # tail -f nohup.out
 echo "Running: uber_custom_models.sh"
@@ -27,26 +31,30 @@ echo "Running: uber_custom_models.sh"
 ###############################################################################
 stage=1 # Values: [0,5]
 substage=1 # Values: [1,2]
+wav_source=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/homed_wav
+ctm_source=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/ctmator/ref_original
+KALDI_ROOT=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi
 # Path to the local file to the lexicon. 
 # Keep empty: lexicon_path= in order to use the standard G2P/WS tool.
 #lexicon_path=
 lexicon_path=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/homed/extracted-words/results-final/lexicon.txt
-wav_source=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/homed_wav
-ctm_source=$ctmator/ref_original
-# Credentials of: https://webservices.cls.ru.nl/
-USER_WS=<CHANGE_THIS_VALUE> 
-PWD_WS=<CHANGE_THIS_VALUE> 
-KALDI_ROOT=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi
-lexiconator=/home/ctejedor/python-scripts/lexiconator
-ctmator=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/ctmator
-check_dur=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/check_duration_audio_files
-# Uncomment the following lines if you have network access
-#[ ! -d $lexiconator ] && git clone https://github.com/cristiantg/lexiconator $lexiconator
-#[ ! -d $ctmator ] && git clone https://github.com/cristiantg/ctmator $ctmator
-#[ ! -d $check_dur ] && git clone https://github.com/cristiantg/check_duration_audio_files $check_dur
-srilm=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/tools/srilm/bin/i686-m64
+output_project=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/homed
+USER_WS=<CHANGE> # Credentials of: https://webservices.cls.ru.nl/
+PWD_WS=<CHANGE> # Credentials of: https://webservices.cls.ru.nl/
+[ ! -d $wav_source ] || [ ! -d $ctm_source ] || [ ! -d $KALDI_ROOT ] && echo "ERROR: WAV/CTM/KALDI paths do not exist." && exit 2
+
+REPOS_FOLDER=$KALDI_ROOT/egs/kaldi_egs_CGN/s5/repos
+## Uncomment the following single line if you have network access:
+## local/check_repositories.sh $REPOS_FOLDER $KALDI_ROOT/tools
+    lexiconator=$REPOS_FOLDER/lexiconator
+    ctmator=$REPOS_FOLDER/ctmator
+    check_dur=$REPOS_FOLDER/check_duration_audio_files
+    srilm=$KALDI_ROOT/tools/srilm/bin/i686-m64
+[ ! -d $lexiconator ] || [ ! -d $ctmator ] || [ ! -d $check_dur ] || [ ! -d $srilm ] && echo "ERROR: The repositories do not exit on the specified path." && exit 2
 ###############################################################################
 ###############################################################################
+
+
 
 
 ###############################################################################
@@ -56,7 +64,6 @@ sox_bitrate=16000
 sox_channels=1
 sox_bits=16
 sox_encoding=signed-integer
-output_project=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/homed
 output_audio_splitted=audio_split
 abs_output_audio_splitted=$output_project/$output_audio_splitted
 abs_output_audio_splitted_aux=$abs_output_audio_splitted/aux
@@ -131,7 +138,7 @@ if [ $stage -le 1 ]; then
     rm -rf $abs_output_audio_splitted_aux
 
     # Check duration
-    $check_dur/get_duration.sh $abs_output_audio_splitted *.wav $output_project/audio_split_files_duration.txt
+    $check_dur/get_duration.sh $abs_output_audio_splitted *.wav $kaldi_data_folder/audio_split_files_duration.txt
 fi
 
 
