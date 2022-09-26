@@ -34,8 +34,7 @@ substage=1 # Values: [1,2]
 wav_source=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/homed_wav
 ctm_source=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/ctmator/ref_original
 KALDI_ROOT=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi
-# Path to the local file to the lexicon. 
-# Keep empty: lexicon_path= in order to use the standard G2P/WS tool.
+# Path to the local file to the lexicon. Keep empty: lexicon_path= in order to use the standard G2P/WS tool.
 #lexicon_path=
 lexicon_path=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/homed/extracted-words/results-final/lexicon.txt
 output_project=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/homed
@@ -106,7 +105,7 @@ if [ $stage -le 0 ]; then
         echo "*+= Stage 0.2 Finished correctly"
         output_folder=$extracted_words_folder/input
         python3 $lexiconator/utils/preparing_raw_data.py $extracted_words_folder $output_folder
-        python3 $lexiconator/uber_script.py $USER_WS $PWD_WS $lexiconator 1 1 "<unk><TAB>spn" $output_folder/wordlist $extracted_words_folder
+        python3 $lexiconator/uber_script.py $USER_WS $PWD_WS $lexiconator 1 1 "<unk><TAB>[SPN]" $output_folder/wordlist $extracted_words_folder
         echo "The local lexicon file is on: $extracted_words_folder/results-final/lexicon.txt"
         echo
         echo $(date)

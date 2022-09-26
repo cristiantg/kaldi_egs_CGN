@@ -12,6 +12,8 @@ s5/output*
 s5/logfile
 s5/exe.sh
 s5/wordlists/lexicon.txt
+s5/wordlists/lexicon133.txt
+s5/wordlists/lexicon301.txt
 s5/wordlists/combined*
 s5/homed
 s5/check_duration_audio_files

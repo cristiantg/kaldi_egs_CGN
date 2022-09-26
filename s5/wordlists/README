@@ -1,27 +1,44 @@
 # Lexicon files sources: UTwente + CGN train (t and s) texts
 # Use the following commands to use the G2P tool of webservices to obatin your custom lexicon:
 #
+# Dependencies: lexiconator and ctmator Github projects donwloaded on $repos_folder
+#
 # 1. Create a file: exe.sh and include the commands at the end of this file.
-# 2. Execution: chmod 700 exe.sh && nohup time exe.sh &
+# 2. Execution: chmod 744 exe.sh && nohup time ./exe.sh &
 # 3. After generating the final lexicon file, you need to set its path
 # to the variable: "lexicon_file" in the file "run.sh" (absolute path)
-#
+# ETA: 51 minutes
 
 
 ## COPY AND PASTE THE FOLLOWING LINES INTO A SHELL SCRIPT: exe.sh
+
 #!/bin/bash
 CLAMUSER=<change-value>
 CLAMPWD=<change-value>
+output=kaldi_egs_CGN/s5/wordlists
+final_lexicon=$output/lexicon301.txt
+repos_folder=kaldi_egs_CGN/s5/repos
+mkdir -p $output $repos_folder
+lexi_project=$repos_folder/lexiconator
+ctmator=$root_folder/ctmator
+out1=$lexi_project/output1
+out2=$lexi_project/output2
 
-output=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/wordlists2/
-final_lexicon=$output/lexicon.txt
-root_folder=/home/ctejedor/python-scripts
-mkdir -p $output $root_folder
-lexi_project=$root_folder/lexiconator
-git clone https://github.com/cristiantg/lexiconator $lexi_project
+if [ ! -d "$lexi_project" ] then
+    git clone https://github.com/cristiantg/lexiconator $lexi_project 
+fi
 ## Make sure the file: $lexi_project/prepare_lexicon.py has REPLACE_AMPERSAND=' -en- '
 ## vi $lexi_project/local/prepare_lexicon.py
-python3 $lexi_project/uber_script.py $CLAMUSER $CLAMPWD $lexi_project 0 0 "" wordlists/lexi1.txt $lexi_project/output1
-python3 $lexi_project/uber_script.py $CLAMUSER $CLAMPWD $lexi_project 0 0 "" wordlists/lexi2.txt $lexi_project/output2
-cat $lexi_project/output1/results-final/lexicon.txt $lexi_project/output2/results-final/lexicon.txt > $final_lexicon
+if [ ! -d "$ctmator" ] then
+    git clone https://github.com/cristiantg/ctmator $ctmator
+fi
+python3 $lexi_project/uber_script.py $CLAMUSER $CLAMPWD $lexi_project 0 0 "" wordlists/lexi1.txt $out1
+python3 $lexi_project/uber_script.py $CLAMUSER $CLAMPWD $lexi_project 0 0 "" wordlists/lexi2.txt $out2
+l1=$out1/results-final/lexicon.txt
+l2=$out2/results-final/lexicon.txt
+sed -i '/^$/d' $l1
+sed -i '/^$/d' $l2
+python3 $ctmator/merge_lex.py $l1 $l2 $final_lexicon
 sed -i '/^$/d' $final_lexicon
+echo "<unk>  [SPN]" >> $final_lexicon
+echo "The final lexicon is in: $final_lexicon"

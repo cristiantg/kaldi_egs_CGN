@@ -12,10 +12,9 @@
 # By default a fully functioning set of models is created using only CGN. Better performance may be had by
 # using more material for the language model and by extending your lexicon.
 #
-
-
-###################exit 0 # TODO REMOVE THIS LINE, IT IS JUST FOR SECURITY
-##
+# How to run this file (see README.md to see all options):
+#
+# nohup time ./run.sh &
 #
 
 echo "+++ run.sh"
@@ -29,7 +28,8 @@ decode=true	# set to false to disable the decoding-related scripts.
 # Optional: ABSOLUTE PATH to your lexicon file. By default, set: lexicon_file=-
 # You might build your own lexicon using the two wordlist files in 'wordlists' folder
 # See more details in: s5/wordlists/README
-lexicon_file=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/wordlists/lexicon.txt
+lexicon_file=- #~100k Dutch words
+#lexicon_file=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/wordlists/lexicon301.txt
 cgn=/vol/bigdata2/corpora2/CGN2			# point this to CGN
 
 . ./cmd.sh	## You'll want to change cmd.sh to something that will work on your system.
@@ -62,7 +62,6 @@ if [ $stage -le 0 ]; then
   local/cgn_format_local_lms.sh --lang-suffix "_nosp"
 
 
-exit 0 # TODO - CRIS REMOVE
 
 
 # Extract MFCC

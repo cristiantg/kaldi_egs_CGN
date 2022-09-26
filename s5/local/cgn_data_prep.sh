@@ -66,15 +66,17 @@ mkdir -p $dictdir
 if [ -f $lexi ]; then
 	echo "** Lexicon: found a custom lexicon, copy&paste it..."	
 	cp $lexi $dictdir/lexicon.txt
-else
+else 
 	echo "** Lexicon: using default CGN lexicon"	
 fi
 if [ ! -f $dictdir/lexicon.txt ]; then
+	echo "** Lexicon: preparing lexicon"
 	[ -e $cgn/data/lexicon/xml/cgnlex.lex ] && cat $cgn/data/lexicon/xml/cgnlex.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
 	[ -e $cgn/data/lexicon/xml/cgnlex_2.0.lex ] && cat $cgn/data/lexicon/xml/cgnlex_2.0.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
-	## uncomment lines below to convert to UTwente phonetic lexicon	
-	# cp $dictdir/lexicon.txt $dictdir/lexicon.orig.txt	
-	# cat $dictdir/lexicon.orig.txt | perl $local/cgn2nbest_phon.pl >$dictdir/lexicon.txt
+	## uncomment the following three lines below to convert to UTwente phonetic lexicon	
+	echo "** Lexicon: Utwente lexicon in $dictdir/lexicon.txt"
+	cp $dictdir/lexicon.txt $dictdir/lexicon.orig.txt	
+	cat $dictdir/lexicon.orig.txt | perl $local/cgn2nbest_phon.pl > $dictdir/lexicon.txt
 else
 	echo "** Lexicon: skipped lexicon preparation"
 fi

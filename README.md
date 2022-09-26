@@ -35,7 +35,7 @@ make -j clean depend; make -j 10
 *Third step:*
 Soft link to wsj project folder:
 ```
-cd $KALDI_ROOT/egs/kaldi_egs_CGN
+project=$KALDI_ROOT/egs/kaldi_egs_CGN/s5/ && cd $project && clear && pwd
 ln -s $KALDI_ROOT/egs/wsj/s5/utils/ s5/utils
 ln -s $KALDI_ROOT/egs/wsj/s5/steps/ s5/steps
 ```
@@ -50,8 +50,8 @@ nano $KALDI_ROOT/egs/kaldi_egs_CGN/s5/path.sh
 *Fifth step:*
 Be sure you have enough privileges to run sh scripts:
 ```
-cd $KALDI_ROOT/egs/kaldi_egs_CGN
-chmod -R 774 ./*
+cd $project && clear && pwd
+chmod -R 770 ./*
 ```
 
 
@@ -61,7 +61,10 @@ chmod -R 774 ./*
 
 *EXE1: ~6h*:
 ```
-# Change: includednnprep=false & stage=0 
+# Change: includednnprep=false & stage=0
+cd $project && clear && pwd
+# mv nohup.out prev_nohup.out
+# rm -r data exp
 nohup time ./run.sh &
 
 # Extra: tree -L 2 data exp > tree_exe1.txt
@@ -75,7 +78,7 @@ nohup time ./run.sh &
 # Extra: tree -L 2 data exp > tree_exe2.txt
 ```
 
-*EXE3 (GPUs needed): ~30h*:
+*EXE3 (GPUs needed): 23h*:
 ```
 nohup time ./local/chain/run_tdnn.sh &
 
@@ -83,7 +86,8 @@ nohup time ./local/chain/run_tdnn.sh &
 ```
 
 
-# Check results
+# Check WER results
+
 ```
 for x in exp/*/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done | sort -n > best_wer.txt
 ```
