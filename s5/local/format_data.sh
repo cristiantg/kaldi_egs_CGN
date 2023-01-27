@@ -14,13 +14,12 @@ silprob=0.5
   mkdir -p $1
 
   arpa_lm=$3
-  [ ! -f $arpa_lm ] && echo No such file $arpa_lm && exit 1;
+  #@#[ ! -f $arpa_lm ] && echo No such file $arpa_lm && exit 1;
 
   # Copy stuff into its final locations...
   #for f in spk2utt utt2spk wav.scp text reco2file_and_channel; do
   for f in spk2utt utt2spk wav.scp text; do
   echo
-  #echo "pepe $4/$f $1/$f"
     cp $4/$f $1/$f || exit 1;
   done
   m_seg=$4/segments
@@ -29,33 +28,35 @@ silprob=0.5
   fi
 
 
-  echo  "-- format_data lm"
-  # grep -v '<s> <s>' etc. is only for future-proofing this script.  Our
-  # LM doesn't have these "invalid combinations".  These can cause 
-  # determinization failures of CLG [ends up being epsilon cycles].
-  # Note: remove_oovs.pl takes a list of words in the LM that aren't in
-  # our word list.  Since our LM doesn't have any, we just give it
-  # /test/null [we leave it in the script to show how you'd do it].
-  gunzip -c "$arpa_lm" | \
-    grep -v '<s> <s>' | \
-    grep -v '</s> <s>' | \
-    grep -v '</s> </s>' | \
-    arpa2fst - | fstprint | \
-    # utils/remove_oovs.pl /test/null | \
-    utils/eps2disambig.pl | utils/s2eps.pl | fstcompile --isymbols=$2/words.txt \
-      --osymbols=$2/words.txt  --keep_isymbols=false --keep_osymbols=false | \
-      fstrmepsilon > $2/G.fst
-    fstisstochastic $2/G.fst
+  if [ -f $arpa_lm ]; then
 
-  echo  "-- Checking how stochastic G is (the first of these numbers should be small):"
-  fstisstochastic $2/G.fst 
+      echo  "-- format_data lm"
+      # grep -v '<s> <s>' etc. is only for future-proofing this script.  Our
+      # LM doesn't have these "invalid combinations".  These can cause 
+      # determinization failures of CLG [ends up being epsilon cycles].
+      # Note: remove_oovs.pl takes a list of words in the LM that aren't in
+      # our word list.  Since our LM doesn't have any, we just give it
+      # /test/null [we leave it in the script to show how you'd do it].
+      gunzip -c "$arpa_lm" | \
+        grep -v '<s> <s>' | \
+        grep -v '</s> <s>' | \
+        grep -v '</s> </s>' | \
+        arpa2fst - | fstprint | \
+        # utils/remove_oovs.pl /test/null | \
+        utils/eps2disambig.pl | utils/s2eps.pl | fstcompile --isymbols=$2/words.txt \
+          --osymbols=$2/words.txt  --keep_isymbols=false --keep_osymbols=false | \
+          fstrmepsilon > $2/G.fst
+        fstisstochastic $2/G.fst
 
-  ## Check lexicon.
-  ## just have a look and make sure it seems sane.
-  echo "-- First few lines of lexicon FST:"
-  fstprint   --isymbols=$2/phones.txt --osymbols=$2/words.txt $2/L.fst  | head
+      echo  "-- Checking how stochastic G is (the first of these numbers should be small):"
+      fstisstochastic $2/G.fst 
 
+      ## Check lexicon.
+      ## just have a look and make sure it seems sane.
+      echo "-- First few lines of lexicon FST:"
+      fstprint   --isymbols=$2/phones.txt --osymbols=$2/words.txt $2/L.fst  | head
 
+fi
 
 # TODO: if uncommented, include   $2 also 
 # echo Performing further checks

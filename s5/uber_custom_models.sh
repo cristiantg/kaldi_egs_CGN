@@ -29,7 +29,7 @@ echo "Running: uber_custom_models.sh"
 ###############################################################################
 # Change the values of the following variables:
 ###############################################################################
-stage=1 # Values: [0,5]
+stage=0 # Values: [0,5]
 substage=1 # Values: [1,2]
 wav_source=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/homed_wav
 ctm_source=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi_nl/ctmator/ref_original
@@ -191,13 +191,44 @@ if [ $stage -le 3 ]; then
 fi
 
 #-# Run on: NO-INTERNET-PC
-if [ $stage -le 4 ]; then    
+if [ $stage -le 4 ]; then
     echo
     echo $(date)
-    echo "*+= Stage 4. Language model preparation and elaboration"
-    rm -rf $kaldi_lang_folder $kaldi_lang_aux_folder
+    echo "*+= Stage 4. Feature extraction"
+    
+    echo '-> 4.1 Format_data LM...'
+    rm -rf $kaldi_data_train_folder $kaldi_lang_folder
+    local/format_data.sh $kaldi_data_train_folder $kaldi_lang_folder $kaldi_arpa $kaldi_data_folder || exit 1
+
+    echo "-> 4.2 Sanity check '$kaldi_data_train_folder'"
+    utils/fix_data_dir.sh $kaldi_data_train_folder  ||  exit 1
+
+    echo "-> 4.3 Prepare lang "
+    rm -rf $kaldi_lang_aux_folder
     utils/prepare_lang.sh "$kaldi_dict_folder" "<unk>" "$kaldi_lang_aux_folder" "$kaldi_lang_folder"  || exit 1
 
+    echo '-> 4.4 Feature extraction make_mfcc'
+    x=train
+    exp_mfcc=$mfccdir/log
+    rm -rf $mfccdir $exp_mfcc
+    utils/fix_data_dir.sh  $kaldi_data_train_folder
+    echo
+    
+    steps/make_mfcc.sh --nj $feats_nj --cmd "$train_cmd" $kaldi_data_train_folder $exp_mfcc $mfccdir
+    echo
+    echo '-> 4.5 Feature extraction compute_cmvn_stats'
+	steps/compute_cmvn_stats.sh $kaldi_data_train_folder $exp_mfcc $mfccdir
+    exit 0
+fi
+
+
+#-# Run on: CLST-cluster
+if [ $stage -le 5 ]; then    
+    echo
+    echo $(date)
+    echo "*+= Stage 5. Language model preparation and elaboration"
+    
+    echo '-> 5.1 LM building...'
 	rm -rf $kaldi_lm_folder && mkdir -p $kaldi_lm_folder
     export  PATH=$PATH:$srilm   || exit 
 	# -text textfile Generate N-gram counts from text file. textfile should contain one sentence unit per line. Begin/end sentence tokens are added if not already present. Empty lines are ignored.
@@ -207,34 +238,15 @@ if [ $stage -le 4 ]; then
 	# Used Witten-Bell smoothing, for small vocab	
 	ngram-count -interpolate -text $kaldi_data_folder/textForLM -vocab $kaldi_dict_folder/wordlist -order $ngram -unk -sort -wbdiscount -lm $kaldi_arpa   || exit 1
 	###read  -n 1 -p "--> Waiting for $arpa_train: " mainmenuinput
-	echo '-> 4.1 Gzip LM...'
+	
+    echo
+    echo '-> 5.2 Gzip LM...'
 	gzip -dk $kaldi_arpa
-fi
 
-#-# Run on: NO-INTERNET-PC
-if [ $stage -le 5 ]; then
+    # Check lm
     echo
-    echo $(date)
-    echo "*+= Stage 5. Feature extraction"
-    
-    echo '-> 5.1 Format_data LM...'
-    rm -rf $kaldi_data_train_folder
+    echo '-> 5.3 Check LM...'
     local/format_data.sh $kaldi_data_train_folder $kaldi_lang_folder $kaldi_arpa $kaldi_data_folder || exit 1
-
-    echo "-> 5.2 Sanity check '$kaldi_data_train_folder'"
-    utils/fix_data_dir.sh $kaldi_data_train_folder  ||  exit 1
-
-    echo '-> 5.3 Feature extraction make_mfcc'
-    x=train
-    exp_mfcc=$mfccdir/log
-    rm -rf $mfccdir $exp_mfcc
-    utils/fix_data_dir.sh  $kaldi_data_train_folder
-    echo
-    
-    steps/make_mfcc.sh --nj $feats_nj --cmd "$train_cmd" $kaldi_data_train_folder $exp_mfcc $mfccdir
-    echo
-    echo '-> 5.3 Feature extraction compute_cmvn_stats'
-	steps/compute_cmvn_stats.sh $kaldi_data_train_folder $exp_mfcc $mfccdir
 fi
 
 
