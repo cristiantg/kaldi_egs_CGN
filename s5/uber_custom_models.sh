@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 ### Preprocessing WAV/CTM files for Kaldi data preparation and feature extraction
-# INPUT:
+# INPUT (same filenames, different extension):
 # 1. wav folder: wav_source
 # 2. ctm folder: ctm_source
 #
-# OUTPUT: $output_project
+# OUTPUT: $output_project folder
 # 1. Kaldi folder with all preprocessed data
 # 2. Feature files
 #
@@ -21,7 +21,12 @@
 # 5.4. SRILM (Kaldi)
 #
 # RUN: 
-# Set first the values of $stage and $substage
+# Set first the values of $stage and $substage:
+# stage=0 && substage=1 --> #-# We extract all single words from the CTM files #-#
+# stage=0 && substage=2 --> #-# We prepare a lexicon file from a G2P tool #-#
+# stage=1 && substage=1 --> #-# Kaldi data folder #-#
+# stage=5 && substage=1 --> #-# LM preparation #-#
+#
 # nohup time ./uber_custom_models.sh &
 # tail -f nohup.out
 echo "Running: uber_custom_models.sh"
@@ -59,6 +64,8 @@ REPOS_FOLDER=$KALDI_ROOT/egs/kaldi_egs_CGN/s5/repos
 ###############################################################################
 # Optional:
 ###############################################################################
+kaldi_data_folder=$output_project/kaldi
+extracted_words_folder=$output_project/extracted-words
 sox_bitrate=16000
 sox_channels=1
 sox_bits=16
@@ -70,8 +77,6 @@ output_ctm_splitted=ctm_split
 abs_ctm_splitted=$output_project/$output_ctm_splitted
 lexiconator_pre_lexicon=$lexiconator/input
 final_combined_lexicon=lexicon-combined.txt
-kaldi_data_folder=$output_project/kaldi
-extracted_words_folder=$output_project/extracted-words
 kaldi_cgn_lexicon=$output_project/../wordlists/lexicon.txt
 kaldi_dict_folder=$kaldi_data_folder/dict
 kaldi_lang_aux_folder=$kaldi_data_folder/lang-aux
@@ -86,7 +91,7 @@ train_cmd=run.pl
 mkdir -p $output_project $kaldi_data_folder
 ###############################################################################
 
-# Prepare a local lexicon fiel from a G2P tool. This step can be skipped.
+# Prepare a local lexicon file from a G2P tool. This step can be skipped.
 if [ $stage -le 0 ]; then
     echo
     echo $(date)
