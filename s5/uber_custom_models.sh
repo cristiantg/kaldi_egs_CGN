@@ -150,6 +150,7 @@ fi
 . ./cmd.sh || exit 2
 [ -f path.sh ] && . ./path.sh || exit 2
 [ ! -d "utils" ] && ln -s $KALDI_ROOT/egs/wsj/s5/utils/ utils
+[ ! -d "steps" ] && ln -s $KALDI_ROOT/egs/wsj/s5/steps/ steps
 
 #-# Run on: NO-INTERNET-PC
 if [ $stage -le 2 ]; then

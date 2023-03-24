@@ -1,5 +1,6 @@
 # TODO: change this path accordingly
 export KALDI_ROOT=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi
+#export KALDI_ROOT=/vol/customopt/kaldi
 
 export PATH=$PWD/utils/:$KALDI_ROOT/tools/openfst/bin:$PWD:$PATH
 [ ! -f $KALDI_ROOT/tools/config/common_path.sh ] && echo >&2 "The standard file $KALDI_ROOT/tools/config/common_path.sh is not present -> Exit!" && exit 1
