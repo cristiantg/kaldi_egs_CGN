@@ -29,7 +29,13 @@ decode=true	# set to false to disable the decoding-related scripts.
 # You might build your own lexicon using the two wordlist files in 'wordlists' folder
 # See more details in: s5/wordlists/README
 lexicon_file=- #~100k Dutch words
+#lexicon_file=/vol/tensusers/ctejedor/homed_nivel/HoMed_models_final/lexicon/nivel-cgn.lex
 #lexicon_file=/vol/tensusers4/ctejedor/lanewcristianmachine/opt/kaldi/egs/kaldi_egs_CGN/s5/wordlists/lexicon301.txt
+# You can set this path to merge your custom 16k audio data (standard kaldi folder including reco2dur) with
+# the CGN studio speech: data_s. #By default, if you do not have such a Kaldi folder, set: custom_kaldi_data_folder=-
+custom_kaldi_data_folder=-
+#custom_kaldi_data_folder=/vol/tensusers/ctejedor/homed_nivel/2023_03_28/kaldi/data/train
+
 cgn=/vol/bigdata2/corpora2/CGN2			# point this to CGN
 
 . ./cmd.sh	## You'll want to change cmd.sh to something that will work on your system.
@@ -65,22 +71,44 @@ if [ $stage -le 0 ]; then
 
 
 # Extract MFCC
+  echo $(date)
+  echo "Extracting mfcc group-s"
   for x in train_s dev_s; do
     steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj data/$x || exit 1;
     steps/compute_cmvn_stats.sh data/$x || exit 1;
   done
 
+  echo $(date)
+  echo "Extracting mfcc group-t"
   for x in train_t dev_t; do
     steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj --mfcc-config conf/mfcc_t.conf data/$x || exit 1;
     steps/compute_cmvn_stats.sh data/$x || exit 1;
   done
-	
+
+
+  if [ -d "$custom_kaldi_data_folder" ]; then
+    echo $(date)
+    echo "Combining group-s and custom kaldi data folder"
+    # Cristian 2023: Custom data_folder
+    aux_data_folder=data/train_s_aux
+    aux_data_cgn_folder=data/train_s_cgn
+    final_data_s_folder=data/train_s 
+    utils/combine_data.sh $aux_data_folder $final_data_s_folder $custom_kaldi_data_folder
+    mv $final_data_s_folder $aux_data_cgn_folder
+    mv $aux_data_folder $final_data_s_folder
+    mv $aux_data_cgn_folder/log $aux_data_cgn_folder/conf $aux_data_cgn_folder/data $final_data_s_folder
+	fi
+
+  echo $(date)
+  echo "Make subsets with 5k random utterances from train."
   # Make subsets with 5k random utterances from train.
   # using only the shortest ones doesn't work as these are too similar
   for x in train_s train_t; do
     utils/subset_data_dir.sh data/$x 5000 data/${x}_5k || exit 1;
   done
-	
+
+  echo $(date)
+  echo "Make sure dev has text_ref"
   # Make sure dev has text_ref
   cp data/dev_s/text data/dev_s/text_ref
   cp data/dev_t/text data/dev_t/text_ref
