@@ -225,8 +225,13 @@ if [ $stage -le 4 ]; then
     echo '-> 4.5 Feature extraction compute_cmvn_stats'
 	steps/compute_cmvn_stats.sh $kaldi_data_train_folder $exp_mfcc $mfccdir
 
-    echo "Let op!: All scp files contain aboslute paths to the files. Please manually modify the paths accordingly when training your models. "
-    echo "You must also create a reco2dur file for the DNN training with the id of the (split file) and teh duration in seconds"
+    echo '-> 4.6 Creating reco2dur file for DNN training'
+    echo "You always need to create a reco2dur file (4.6) for the DNN training with the id of the (split file) and the duration in seconds"
+    utils/data/get_reco2dur.sh $kaldi_data_train_folder
+
+    
+    echo "Let op!: All scp files contain aboslute paths to the files. If you move the folder to another location, you need to modify the paths accordingly when training your models."
+    
     exit 0
 fi
 
