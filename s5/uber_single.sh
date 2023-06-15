@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 
 # Decodes a single audio file in real-time
-
-# run: ./uber_single.sh . input_folder input_file_name output_folder output_file_name spk_id beam
-# r.a. example: ./uber_single.sh . raw_data/other bird.wav output2/other bird speaker 15
-# r.b. optimized: ./uber_single.sh . raw_data/other bird.wav output2/other bird speaker 15 > somefile 2>&1
+# 
+#
+# run: 
+# cd <this_folder> # so the path.sh call is OK
+# ./uber_single.sh AM_PATH input_folder input_file_name output_folder output_file_name spk_id beam LM_PATH
+#
+# Examples:
+# ./uber_single.sh AM_PATH raw_data/other bird.wav output2/other bird speaker 15 LM_PATH
+# ./uber_single.sh AM_PATH raw_data/other bird.wav output2/other bird speaker 15 LM_PATH > somefile 2>&1
 
 
 # 1. Prepare environment
-root_project=$1/../../
-. $root_project/cmd.sh
+root_project=.
 . $root_project/path.sh
 
 
@@ -29,6 +33,9 @@ output_folder=$4
 output_file_name=$5
 #spk_id="speaker"
 spk_id=$6
+beam=${7}
+AM_PATH=${1}
+LM_PATH=${8}
 
 
 # 3. Decoding the audio file
@@ -42,17 +49,17 @@ if [ -f "$audio_file" ]; then
     --online=false \
     --do-endpointing=false \
     --frame-subsampling-factor=3 \
-    --config=${1}/conf/online.conf \
+    --config=$AM_PATH/conf/online.conf \
     --max-active=7000 \
     --beam=${7} \
     --lattice-beam=6.0 \
     --acoustic-scale=1.0 \
-    --word-symbol-table=${1}/graph_s/words.txt \
-    ${1}/final.mdl \
-    ${1}/graph_s/HCLG.fst \
+    --word-symbol-table=$LM_PATH/words.txt \
+    $AM_PATH/final.mdl \
+    $LM_PATH/HCLG.fst \
     'ark:echo '$spk_id' '$utt'|' \
     'scp:echo '$utt' '$audio_file'|' \
     ark:- | lattice-to-ctm-conf --frame-shift=0.03 ark:- $output_folder/$m_bestsym
 
-    $root_project/utils/int2sym.pl -f 5 ${1}/graph_s/words.txt $output_folder/$m_bestsym > $output_folder/$output_file_name
+    $root_project/utils/int2sym.pl -f 5 $LM_PATH/words.txt $output_folder/$m_bestsym > $output_folder/$output_file_name
 fi
